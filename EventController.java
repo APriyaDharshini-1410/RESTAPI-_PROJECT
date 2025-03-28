@@ -1,54 +1,76 @@
 package com.examly.demo.Controller;
 
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.examly.demo.Model.Event;
 import com.examly.demo.Service.EventService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/events")
+@RequestMapping("/events")
 public class EventController {
-@Autowired
-private EventService eventService;
-@PostMapping
-public ResponseEntity<Event> createEvent(@RequestBody Event event) {
-        return ResponseEntity.ok(eventService.createEvent(event));
+
+    @Autowired
+    private EventService eventService;
+
+    // Create Event
+    @PostMapping
+    public ResponseEntity<Event> createEvent(@RequestBody Event event) {
+        return ResponseEntity.ok(eventService.saveEvent(event));
     }
-    @GetMapping("/Get")
-     public ResponseEntity<Page<Event>> getAllEvents(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(eventService.getAllEvents(page, size));
+
+    // Get All Events with Pagination & Sorting
+    @GetMapping
+    public ResponseEntity<Page<Event>> getAllEvents(Pageable pageable) {
+        return ResponseEntity.ok(eventService.getAllEvents(pageable));
     }
+
+    // Get Event by ID
     @GetMapping("/{id}")
-    public ResponseEntity<Event> getEventById(@PathVariable Long id) {
-        return eventService.getEventById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Optional<Event>> getEventById(@PathVariable Long id) {
+        return ResponseEntity.ok(eventService.getEventById(id));
     }
-@PutMapping("/{id}")
-public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody Event event) {
-    return eventService.updateEvent(id, event)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
-}
-@DeleteMapping("/{id}")
-public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
-    if (eventService.deleteEvent(id)) {
+
+    // Find Events by Location
+    @GetMapping("/search/location/{location}")
+    public ResponseEntity<List<Event>> findEventsByLocation(@PathVariable String location) {
+        return ResponseEntity.ok(eventService.findEventsByLocation(location));
+    }
+
+    // Find Upcoming Events
+    @GetMapping("/search/upcoming/{dateTime}")
+    public ResponseEntity<List<Event>> findUpcomingEvents(@PathVariable LocalDateTime dateTime) {
+        return ResponseEntity.ok(eventService.findUpcomingEvents(dateTime));
+    }
+
+    // Count Events at a Location
+    @GetMapping("/count/location/{location}")
+    public ResponseEntity<Long> countEventsByLocation(@PathVariable String location) {
+        return ResponseEntity.ok(eventService.countEventsByLocation(location));
+    }
+
+    // Update Event Name
+    @PutMapping("/update/name/{id}")
+    public ResponseEntity<Integer> updateEventName(@PathVariable Long id, @RequestBody String name) {
+        return ResponseEntity.ok(eventService.updateEventName(id, name));
+    }
+
+    // Update Event Location
+    @PutMapping("/update/location/{id}")
+    public ResponseEntity<Integer> updateEventLocation(@PathVariable Long id, @RequestBody String location) {
+        return ResponseEntity.ok(eventService.updateEventLocation(id, location));
+    }
+
+    // Delete Event by ID
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<Void> deleteEventById(@PathVariable Long id) {
+        eventService.deleteEventById(id);
         return ResponseEntity.noContent().build();
     }
-    return ResponseEntity.notFound().build();
-}
 }

@@ -1,51 +1,71 @@
 package com.examly.demo.Service;
 
+import com.examly.demo.Model.User;
+import com.examly.demo.Repository.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
-import com.examly.demo.Model.User;
-import com.examly.demo.Repository.UserRepository;
-
 @Service
 public class UserService {
-@Autowired
- private UserRepository userRepository;
+    @Autowired
+    private UserRepository userRepository;
 
-    public User createUser(User user) {
+    // Create User
+    public User saveUser(User user) {
         return userRepository.save(user);
     }
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    // Get All Users with Pagination & Sorting
+    public Page<User> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable);
     }
 
+    // Get User by ID
     public Optional<User> getUserById(Long id) {
         return userRepository.findById(id);
     }
 
-    public Optional<User> updateUser(Long id, User userDetails) {
-        return userRepository.findById(id).map(user -> {
-            user.setName(userDetails.getName());
-            user.setEmail(userDetails.getEmail());
-            return userRepository.save(user);
-        });
+    // Find Users by Role
+    public List<User> findUsersByRole(String role) {
+        return userRepository.findByRole(role);
     }
 
-    public boolean deleteUser(Long id) {
-        return userRepository.findById(id).map(user -> {
-            userRepository.delete(user);
-            return true;
-        }).orElse(false);
+    // Find User by Email
+    public User findUserByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 
-    public Page<User> paginateUsers(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return userRepository.findAll(pageable);
+    // Count Users by Role
+    public Long countUsersByRole(String role) {
+        return userRepository.countByRole(role);
+    }
+
+    // Update User Name
+    @Transactional
+    public int updateUserName(Long id, String name) {
+        return userRepository.updateUserName(id, name);
+    }
+
+    // Update User Password
+    @Transactional
+    public int updateUserPassword(Long id, String password) {
+        return userRepository.updateUserPassword(id, password);
+    }
+
+    // Delete User by ID
+    @Transactional
+    public void deleteUserById(Long id) {
+        userRepository.deleteUserById(id);
+    }
+
+    // Delete User by Email
+    @Transactional
+    public void deleteUserByEmail(String email) {
+        userRepository.deleteUserByEmail(email);
     }
 }

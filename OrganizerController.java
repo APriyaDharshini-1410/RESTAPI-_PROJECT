@@ -1,52 +1,87 @@
 package com.examly.demo.Controller;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.examly.demo.Model.Organizer;
 import com.examly.demo.Service.OrganizerService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/organizers")
+@RequestMapping("/organizers")
 public class OrganizerController {
-@Autowired
-private OrganizerService organizerService;
-@PostMapping("/Post")
- public ResponseEntity<Organizer> createOrganizer(@RequestBody Organizer organizer) {
-        return ResponseEntity.ok(organizerService.createOrganizer(organizer));
+
+    @Autowired
+    private OrganizerService organizerService;
+
+    // Create Organizer
+    @PostMapping
+    public ResponseEntity<Organizer> createOrganizer(@RequestBody Organizer organizer) {
+        return ResponseEntity.ok(organizerService.saveOrganizer(organizer));
     }
-    @GetMapping("/Get")
-    public ResponseEntity<List<Organizer>> getAllOrganizers() {
-        return ResponseEntity.ok(organizerService.getAllOrganizers());
+
+    // Get All Organizers with Pagination & Sorting
+    @GetMapping
+    public ResponseEntity<Page<Organizer>> getAllOrganizers(Pageable pageable) {
+        return ResponseEntity.ok(organizerService.getAllOrganizers(pageable));
     }
-    @GetMapping("/paginate")
-    public ResponseEntity<Page<Organizer>> paginateOrganizers(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(organizerService.paginateOrganizers(page, size));
-    } 
+
+    // Get Organizer by ID
     @GetMapping("/{id}")
-    public ResponseEntity<Organizer> getOrganizerById(@PathVariable Long id) {
-        return organizerService.getOrganizerById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Optional<Organizer>> getOrganizerById(@PathVariable Long id) {
+        return ResponseEntity.ok(organizerService.getOrganizerById(id));
     }
+
+    // Get Organizer by Email
+    @GetMapping("/email/{email}")
+    public ResponseEntity<Optional<Organizer>> getOrganizerByEmail(@PathVariable String email) {
+        return ResponseEntity.ok(organizerService.getOrganizerByEmail(email));
+    }
+
+    // Find Organizers by Name
+    @GetMapping("/search/name/{name}")
+    public ResponseEntity<List<Organizer>> findOrganizersByName(@PathVariable String name) {
+        return ResponseEntity.ok(organizerService.findOrganizersByName(name));
+    }
+
+    // Count Organizers by Name
+    @GetMapping("/count/name/{name}")
+    public ResponseEntity<Long> countOrganizersByName(@PathVariable String name) {
+        return ResponseEntity.ok(organizerService.countOrganizersByName(name));
+    }
+
+    // ✅ Normal Update Organizer (PUT) - Update all fields
+    @PutMapping("/{id}")
+    public ResponseEntity<Organizer> updateOrganizer(@PathVariable Long id, @RequestBody Organizer organizer) {
+        return ResponseEntity.ok(organizerService.updateOrganizer(id, organizer));
+    }
+
+    // ✅ Custom Update - Update only Name
+    @PutMapping("/update/name/{id}")
+    public ResponseEntity<Integer> updateOrganizerName(@PathVariable Long id, @RequestBody String name) {
+        return ResponseEntity.ok(organizerService.updateOrganizerName(id, name));
+    }
+
+    // ✅ Custom Update - Update only Email
+    @PutMapping("/update/email/{id}")
+    public ResponseEntity<Integer> updateOrganizerEmail(@PathVariable Long id, @RequestBody String email) {
+        return ResponseEntity.ok(organizerService.updateOrganizerEmail(id, email));
+    }
+
+    // ✅ Normal Delete by ID
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrganizer(@PathVariable Long id) {
-        if (organizerService.deleteOrganizer(id)) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+        organizerService.deleteOrganizerById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ✅ Custom Delete by Email
+    @DeleteMapping("/delete/email/{email}")
+    public ResponseEntity<Integer> deleteOrganizerByEmail(@PathVariable String email) {
+        return ResponseEntity.ok(organizerService.deleteOrganizerByEmail(email));
     }
 }
